@@ -1,122 +1,79 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { Navigate, Route, Routes } from 'react-router-dom';
+import { useApp } from './context/AppContext';
+import { HOME_BY_ROLE } from './components/layout/navConfig';
+import ProtectedRoute from './components/layout/ProtectedRoute';
+import Toast from './components/ui/Toast';
 
-function App() {
-  const [count, setCount] = useState(0)
+import Login from './pages/Login';
+import Register from './pages/Register';
+import NotFound from './pages/NotFound';
+
+import StudentDashboard from './pages/student/Dashboard';
+import StudentEvents from './pages/student/Events';
+import StudentEventDetail from './pages/student/EventDetail';
+import StudentEventQR from './pages/student/EventQR';
+import StudentPoints from './pages/student/Points';
+import StudentHistory from './pages/student/History';
+
+import VolunteerEvents from './pages/volunteer/Events';
+import VolunteerEventDetail from './pages/volunteer/EventDetail';
+import VolunteerScanner from './pages/volunteer/Scanner';
+
+import AdminDashboard from './pages/admin/Dashboard';
+import AdminEvents from './pages/admin/Events';
+import AdminEventCreate from './pages/admin/EventCreate';
+import AdminEventDetail from './pages/admin/EventDetail';
+import AdminStudents from './pages/admin/Students';
+import AdminVolunteers from './pages/admin/Volunteers';
+import AdminReports from './pages/admin/Reports';
+import AdminPoints from './pages/admin/Points';
+
+export default function App() {
+  const { currentUser } = useApp();
 
   return (
     <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+      <Routes>
+        <Route
+          path="/"
+          element={<Navigate to={currentUser ? HOME_BY_ROLE[currentUser.role] : '/login'} replace />}
+        />
+        <Route path="/login" element={currentUser ? <Navigate to={HOME_BY_ROLE[currentUser.role]} replace /> : <Login />} />
+        <Route path="/register" element={currentUser ? <Navigate to={HOME_BY_ROLE[currentUser.role]} replace /> : <Register />} />
 
-      <div className="ticks"></div>
+        <Route element={<ProtectedRoute roles={['student']} />}>
+          <Route path="/student/dashboard" element={<StudentDashboard />} />
+          <Route path="/student/events" element={<StudentEvents />} />
+          <Route path="/student/events/:eventId" element={<StudentEventDetail />} />
+          <Route path="/student/events/:eventId/qr" element={<StudentEventQR />} />
+          <Route path="/student/points" element={<StudentPoints />} />
+          <Route path="/student/history" element={<StudentHistory />} />
+        </Route>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        <Route element={<ProtectedRoute roles={['volunteer']} />}>
+          <Route path="/volunteer/events" element={<VolunteerEvents />} />
+          <Route path="/volunteer/events/:eventId" element={<VolunteerEventDetail />} />
+          <Route path="/volunteer/scanner" element={<VolunteerScanner />} />
+          <Route path="/volunteer/scanner/:eventId" element={<VolunteerScanner />} />
+        </Route>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
+        <Route element={<ProtectedRoute roles={['coordinator', 'superadmin']} />}>
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/events" element={<AdminEvents />} />
+          <Route path="/admin/events/create" element={<AdminEventCreate />} />
+          <Route path="/admin/events/:eventId" element={<AdminEventDetail />} />
+          <Route path="/admin/reports" element={<AdminReports />} />
+          <Route path="/admin/points" element={<AdminPoints />} />
+        </Route>
+
+        <Route element={<ProtectedRoute roles={['superadmin']} />}>
+          <Route path="/admin/students" element={<AdminStudents />} />
+          <Route path="/admin/volunteers" element={<AdminVolunteers />} />
+        </Route>
+
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <Toast />
     </>
-  )
+  );
 }
-
-export default App
