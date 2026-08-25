@@ -11,7 +11,7 @@ const STORAGE_KEY = 'apticore_db_v1';
 const SESSION_KEY = 'apticore_session_v1';
 
 function buildSeedDatabase() {
-  const users = SEED_USERS.map((u) => ({ ...u }));
+  const users = SEED_USERS.map((u) => ({ ...u, isDemo: true }));
   const events = SEED_EVENTS.map((e) => ({ ...e }));
   const registrations = [];
   const attendance = [];
