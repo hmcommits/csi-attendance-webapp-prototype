@@ -1,4 +1,4 @@
-# AptiCore — CSI Attendance Prototype
+# Attendance Webapp — CSI Attendance Prototype
 
 A frontend-only prototype of the CSI Attendance Management System: student event
 registration, QR-based check-in, volunteer identity verification, points, and
@@ -6,7 +6,7 @@ admin reporting. Built as a lightweight design/UX prototype — **there is no
 backend**. All data is generated on load and persisted to `localStorage` in
 the browser, so it survives refreshes but resets if you clear site data.
 
-Visual language follows the AptiCore UI/UX design system (Inter, Deep Indigo
+Visual language follows the Attendance Webapp UI/UX design system (Inter, Deep Indigo
 `#191265`, 8–16px radii, restrained shadows).
 
 ## Stack

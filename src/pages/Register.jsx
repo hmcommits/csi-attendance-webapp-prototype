@@ -77,7 +77,7 @@ export default function Register() {
           <div className="flex items-center justify-center size-9 rounded-md bg-primary text-white">
             <LayoutGrid className="size-5" />
           </div>
-          <span className="text-lg font-bold text-ink">AptiCore</span>
+          <span className="text-lg font-bold text-ink">Attendance Webapp</span>
         </div>
 
         <div className="rounded-lg border border-border bg-surface shadow-card p-6 sm:p-8">

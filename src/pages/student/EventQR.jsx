@@ -48,7 +48,7 @@ export default function StudentEventQR() {
                 <LayoutGrid className="size-4.5" />
               </div>
               <div>
-                <p className="text-sm font-bold leading-tight">AptiCore</p>
+                <p className="text-sm font-bold leading-tight">Attendance Webapp</p>
                 <p className="text-[11px] text-white/70 leading-tight">Event Attendance Pass</p>
               </div>
             </div>

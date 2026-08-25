@@ -57,7 +57,7 @@ export default function Login() {
           <div className="flex items-center justify-center size-9 rounded-md bg-white/15">
             <LayoutGrid className="size-5" />
           </div>
-          <span className="text-lg font-bold">AptiCore</span>
+          <span className="text-lg font-bold">Attendance Webapp</span>
         </div>
 
         <div className="relative max-w-md">
@@ -93,7 +93,7 @@ export default function Login() {
             <div className="flex items-center justify-center size-9 rounded-md bg-primary text-white">
               <LayoutGrid className="size-5" />
             </div>
-            <span className="text-lg font-bold text-ink">AptiCore</span>
+            <span className="text-lg font-bold text-ink">Attendance Webapp</span>
           </div>
 
           <h2 className="text-2xl font-bold text-ink">Welcome back</h2>

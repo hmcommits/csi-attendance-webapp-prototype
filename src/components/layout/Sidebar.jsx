@@ -29,7 +29,7 @@ export default function Sidebar({ mobileOpen, onCloseMobile }) {
               <LayoutGrid className="size-4.5" />
             </div>
             <div>
-              <p className="text-sm font-bold text-ink leading-tight">AptiCore</p>
+              <p className="text-sm font-bold text-ink leading-tight">Attendance Webapp</p>
               <p className="text-[11px] text-muted leading-tight">CSI Attendance</p>
             </div>
           </div>
