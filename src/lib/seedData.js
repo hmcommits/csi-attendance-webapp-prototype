@@ -1,8 +1,6 @@
 // Mock seed data for the AptiCore / CSI Attendance prototype.
 // Dates are generated relative to "today" so the demo always looks live.
 
-const DAY = 24 * 60 * 60 * 1000;
-
 function daysFromNow(n, hour = 10, minute = 0) {
   const d = new Date();
   d.setDate(d.getDate() + n);

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
   ScanLine,
@@ -9,14 +9,12 @@ import {
   CheckCircle2,
   XCircle,
   IdCard,
-  Search,
   Layers,
   Clock3,
 } from 'lucide-react';
 import Shell from '../../components/layout/Shell';
 import Card, { CardHeader } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
-import Badge from '../../components/ui/Badge';
 import EmptyState from '../../components/ui/EmptyState';
 import { Select } from '../../components/ui/Input';
 import { useApp } from '../../context/AppContext';
@@ -24,7 +22,6 @@ import { cn, initials, formatTime } from '../../lib/utils';
 
 export default function VolunteerScanner() {
   const { eventId } = useParams();
-  const navigate = useNavigate();
   const { db, currentUser, verifyScanToken, confirmAttendance, queueOfflineScan, syncOfflineQueue } =
     useApp();
 
@@ -42,10 +39,11 @@ export default function VolunteerScanner() {
 
   const event = db.events.find((e) => e.id === eventId);
 
-  useEffect(() => {
-    if (event?.sessions?.length) setSessionId(event.sessions[0].id);
-    else setSessionId('');
-  }, [event]);
+  const [lastEventId, setLastEventId] = useState(eventId);
+  if (eventId !== lastEventId) {
+    setLastEventId(eventId);
+    setSessionId(event?.sessions?.length ? event.sessions[0].id : '');
+  }
 
   const myQueue = db.offlineQueue.filter((q) => q.event === eventId && !q.synced);
 

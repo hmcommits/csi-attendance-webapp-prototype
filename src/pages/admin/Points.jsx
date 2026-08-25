@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Search, Trophy, Award, Download } from 'lucide-react';
 import Shell from '../../components/layout/Shell';
-import Card, { CardHeader } from '../../components/ui/Card';
+import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import StatCard from '../../components/ui/StatCard';

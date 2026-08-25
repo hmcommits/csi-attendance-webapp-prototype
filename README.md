@@ -1,16 +1,56 @@
-# React + Vite
+# AptiCore — CSI Attendance Prototype
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A frontend-only prototype of the CSI Attendance Management System: student event
+registration, QR-based check-in, volunteer identity verification, points, and
+admin reporting. Built as a lightweight design/UX prototype — **there is no
+backend**. All data is generated on load and persisted to `localStorage` in
+the browser, so it survives refreshes but resets if you clear site data.
 
-Currently, two official plugins are available:
+Visual language follows the AptiCore UI/UX design system (Inter, Deep Indigo
+`#191265`, 8–16px radii, restrained shadows).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Stack
 
-## React Compiler
+React 19 + Vite, React Router, Tailwind CSS v4, Lucide icons, `qrcode.react`.
+No state management library — a single `AppContext` holds the mock database
+and exposes the actions (login, register, create event, scan, confirm, etc).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Run it
 
-## Expanding the Oxlint configuration
+```bash
+npm install
+npm run dev
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+## Demo accounts
+
+The login screen has one-click "Quick demo access" buttons for each role, or
+sign in manually with:
+
+| Role | GR Number | Password |
+| --- | --- | --- |
+| Super Admin | `ADMIN001` | `admin123` |
+| Event Coordinator | `COORD001` | `coord123` |
+| Volunteer | `VOL001` | `vol123` |
+| Student | `22CO045` | `student123` |
+
+## What's included
+
+- **Student** — browse/register for events, event-specific QR pass, points
+  history, participation timeline.
+- **Volunteer** — assigned events, a scanning flow that simulates the
+  anti-proxy check (scan → compare identity against a "physical ID" →
+  confirm), online/offline mode with a local sync queue.
+- **Admin (Coordinator / Super Admin)** — live dashboard, full event CRUD
+  with sessions and volunteer assignment, student approvals, staff
+  management, CSV exports, and a points leaderboard.
+
+## Notes on the prototype
+
+- QR tokens are base64-encoded JSON, not signed JWTs — there's no server to
+  verify a signature against.
+- "Excel"/"PDF" exports in the Reports page fall back to CSV — this is a
+  frontend-only prototype with no report-generation service.
+- Camera scanning is simulated (pick the next registrant, or search by name)
+  rather than using a live camera feed, since there are no real physical QR
+  codes to scan against in a demo environment.
