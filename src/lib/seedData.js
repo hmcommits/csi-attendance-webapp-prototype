@@ -198,7 +198,7 @@ export const SEED_USERS = [
     email: 'rohan.kulkarni@dmce.ac.in',
     phone: '9876500015',
     role: 'student',
-    isApproved: false,
+    isApproved: true,
     createdAt: daysFromNow(-2),
   },
   {
@@ -214,7 +214,7 @@ export const SEED_USERS = [
     email: 'tanvi.bhosale@dmce.ac.in',
     phone: '9876500016',
     role: 'student',
-    isApproved: false,
+    isApproved: true,
     createdAt: daysFromNow(-1),
   },
   {

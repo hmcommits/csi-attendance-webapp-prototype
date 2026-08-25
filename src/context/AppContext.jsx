@@ -149,33 +149,14 @@ export function AppProvider({ children }) {
       const user = {
         id: uid('u'),
         role: 'student',
-        isApproved: false,
         createdAt: new Date().toISOString(),
         ...payload,
+        isApproved: true,
       };
       setDb((prev) => ({ ...prev, users: [...prev.users, user] }));
       return { ok: true, user };
     },
     [db.users],
-  );
-
-  const approveStudent = useCallback((userId) => {
-    setDb((prev) => ({
-      ...prev,
-      users: prev.users.map((u) => (u.id === userId ? { ...u, isApproved: true } : u)),
-    }));
-    notify('Student approved.');
-  }, [notify]);
-
-  const resetPassword = useCallback(
-    (userId, newPassword) => {
-      setDb((prev) => ({
-        ...prev,
-        users: prev.users.map((u) => (u.id === userId ? { ...u, password: newPassword } : u)),
-      }));
-      notify('Password reset successfully.');
-    },
-    [notify],
   );
 
   const createUser = useCallback(
@@ -449,8 +430,6 @@ export function AppProvider({ children }) {
       login,
       logout,
       registerStudent,
-      approveStudent,
-      resetPassword,
       createUser,
       updateUser,
       deleteUser,
@@ -474,8 +453,6 @@ export function AppProvider({ children }) {
       login,
       logout,
       registerStudent,
-      approveStudent,
-      resetPassword,
       createUser,
       updateUser,
       deleteUser,

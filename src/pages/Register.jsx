@@ -57,10 +57,9 @@ export default function Register() {
           <div className="mx-auto flex items-center justify-center size-14 rounded-full bg-success-soft text-success mb-5">
             <CheckCircle2 className="size-7" />
           </div>
-          <h2 className="text-xl font-bold text-ink">Registration submitted</h2>
+          <h2 className="text-xl font-bold text-ink">Account created</h2>
           <p className="text-sm text-muted mt-2 leading-relaxed">
-            Your account is pending administrator approval. You'll be able to sign in with your
-            GR number and password once approved.
+            Your account is ready to use. You can sign in now with your GR number and password.
           </p>
           <Button className="w-full mt-6" onClick={() => navigate('/login')}>
             Back to sign in
@@ -83,7 +82,7 @@ export default function Register() {
         <div className="rounded-lg border border-border bg-surface shadow-card p-6 sm:p-8">
           <h2 className="text-2xl font-bold text-ink">Create your student account</h2>
           <p className="text-sm text-muted mt-1.5">
-            Self-registration requires administrator approval before you can sign in.
+            Your account is created instantly — no approval wait, sign in right after.
           </p>
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">

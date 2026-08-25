@@ -1,6 +1,16 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { LayoutGrid, LogIn, KeyRound, IdCard, ShieldCheck, ScanLine, GraduationCap } from 'lucide-react';
+import {
+  LayoutGrid,
+  LogIn,
+  KeyRound,
+  IdCard,
+  ShieldCheck,
+  ScanLine,
+  GraduationCap,
+  Eye,
+  EyeOff,
+} from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { HOME_BY_ROLE } from '../components/layout/navConfig';
 import Button from '../components/ui/Button';
@@ -18,6 +28,7 @@ export default function Login() {
   const navigate = useNavigate();
   const [grNumber, setGrNumber] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -114,13 +125,24 @@ export default function Login() {
             <Field label="Password" htmlFor="password" required error={error}>
               <Input
                 id="password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 icon={KeyRound}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
                 required
+                endAdornment={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="text-muted hover:text-ink transition-colors"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                }
               />
             </Field>
 

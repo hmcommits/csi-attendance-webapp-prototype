@@ -1,67 +1,50 @@
 import { useMemo, useState } from 'react';
-import { Search, UserCheck, KeyRound, Trash2, GraduationCap } from 'lucide-react';
+import { Search, KeyRound, Trash2, GraduationCap, CalendarDays, MailCheck } from 'lucide-react';
 import Shell from '../../components/layout/Shell';
 import Card from '../../components/ui/Card';
 import EmptyState from '../../components/ui/EmptyState';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
-import { ApprovalBadge } from '../../components/StatusBadge';
-import { Field, Input } from '../../components/ui/Input';
+import Badge from '../../components/ui/Badge';
+import { Input } from '../../components/ui/Input';
 import { useApp } from '../../context/AppContext';
-import { cn, initials } from '../../lib/utils';
-
-const FILTERS = ['all', 'pending', 'approved'];
+import { EVENT_TYPE_LABELS, formatDate, initials } from '../../lib/utils';
 
 export default function AdminStudents() {
-  const { db, approveStudent, deleteUser, resetPassword } = useApp();
+  const { db, deleteUser } = useApp();
   const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState('all');
   const [resetTarget, setResetTarget] = useState(null);
-  const [newPassword, setNewPassword] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [eventsTarget, setEventsTarget] = useState(null);
 
   const students = useMemo(() => {
     return db.users
       .filter((u) => u.role === 'student')
-      .filter((u) => (filter === 'pending' ? !u.isApproved : filter === 'approved' ? u.isApproved : true))
-      .filter((u) => u.name.toLowerCase().includes(query.toLowerCase()) || u.grNumber.toLowerCase().includes(query.toLowerCase()))
-      .sort((a, b) => Number(a.isApproved) - Number(b.isApproved));
-  }, [db.users, filter, query]);
+      .filter(
+        (u) =>
+          u.name.toLowerCase().includes(query.toLowerCase()) ||
+          u.grNumber.toLowerCase().includes(query.toLowerCase()),
+      )
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [db.users, query]);
 
-  const pendingCount = db.users.filter((u) => u.role === 'student' && !u.isApproved).length;
-
-  const openReset = (student) => {
-    setResetTarget(student);
-    setNewPassword('');
-  };
-
-  const handleReset = () => {
-    if (!newPassword) return;
-    resetPassword(resetTarget.id, newPassword);
-    setResetTarget(null);
+  const handleDelete = () => {
+    deleteUser(deleteTarget.id);
+    setDeleteTarget(null);
   };
 
   return (
-    <Shell title="Students" subtitle={`${pendingCount} account${pendingCount === 1 ? '' : 's'} pending approval.`}>
-      <div className="flex flex-col sm:flex-row gap-3 mb-5">
-        <Input icon={Search} placeholder="Search by name or GR number..." value={query} onChange={(e) => setQuery(e.target.value)} className="sm:max-w-xs" />
-        <div className="flex gap-1.5 bg-slate-100 rounded-sm p-1">
-          {FILTERS.map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={cn(
-                'px-3 py-1.5 rounded-sm text-[13px] font-medium capitalize transition-colors',
-                filter === f ? 'bg-white text-primary shadow-sm' : 'text-muted hover:text-ink',
-              )}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-      </div>
+    <Shell title="Students" subtitle={`${students.length} approved student account${students.length === 1 ? '' : 's'}.`}>
+      <Input
+        icon={Search}
+        placeholder="Search by name or GR number..."
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        className="max-w-xs mb-5"
+      />
 
       {students.length === 0 ? (
-        <EmptyState icon={GraduationCap} title="No students found" description="Try a different search or filter." />
+        <EmptyState icon={GraduationCap} title="No students found" description="Try a different search." />
       ) : (
         <Card padded={false}>
           <div className="overflow-x-auto">
@@ -72,7 +55,6 @@ export default function AdminStudents() {
                   <th className="px-5 py-3">GR Number</th>
                   <th className="px-5 py-3">Class</th>
                   <th className="px-5 py-3">Department</th>
-                  <th className="px-5 py-3">Status</th>
                   <th className="px-5 py-3 text-right">Actions</th>
                 </tr>
               </thead>
@@ -93,19 +75,14 @@ export default function AdminStudents() {
                     </td>
                     <td className="px-5 py-3 text-muted">{student.department}</td>
                     <td className="px-5 py-3">
-                      <ApprovalBadge approved={student.isApproved} />
-                    </td>
-                    <td className="px-5 py-3">
                       <div className="flex justify-end gap-2">
-                        {!student.isApproved && (
-                          <Button size="sm" variant="secondary" onClick={() => approveStudent(student.id)}>
-                            <UserCheck className="size-3.5" /> Approve
-                          </Button>
-                        )}
-                        <Button size="sm" variant="secondary" onClick={() => openReset(student)}>
+                        <Button size="sm" variant="secondary" onClick={() => setEventsTarget(student)}>
+                          <CalendarDays className="size-3.5" /> Events
+                        </Button>
+                        <Button size="sm" variant="secondary" onClick={() => setResetTarget(student)}>
                           <KeyRound className="size-3.5" />
                         </Button>
-                        <Button size="sm" variant="destructive-outline" onClick={() => deleteUser(student.id)}>
+                        <Button size="sm" variant="destructive-outline" onClick={() => setDeleteTarget(student)}>
                           <Trash2 className="size-3.5" />
                         </Button>
                       </div>
@@ -118,26 +95,132 @@ export default function AdminStudents() {
         </Card>
       )}
 
+      <ResetPasswordModal student={resetTarget} onClose={() => setResetTarget(null)} />
+      <StudentEventsModal student={eventsTarget} db={db} onClose={() => setEventsTarget(null)} />
+
       <Modal
-        open={!!resetTarget}
-        onClose={() => setResetTarget(null)}
-        title="Reset password"
-        subtitle={resetTarget ? `Set a new password for ${resetTarget.name}` : ''}
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title="Delete this student?"
+        subtitle="This will permanently remove the account. Registrations and attendance data will remain orphaned."
         footer={
           <>
-            <Button variant="secondary" onClick={() => setResetTarget(null)}>
+            <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
               Cancel
             </Button>
-            <Button onClick={handleReset} disabled={!newPassword}>
-              Reset password
+            <Button variant="destructive" onClick={handleDelete}>
+              <Trash2 className="size-4" /> Delete
             </Button>
           </>
         }
       >
-        <Field label="New password" htmlFor="newPassword" required>
-          <Input id="newPassword" type="text" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Enter a new password" />
-        </Field>
+        <p className="text-sm text-muted">
+          Are you sure you want to delete <span className="font-semibold text-ink">{deleteTarget?.name}</span> (
+          {deleteTarget?.grNumber})? This action cannot be undone.
+        </p>
       </Modal>
     </Shell>
+  );
+}
+
+function ResetPasswordModal({ student, onClose }) {
+  const [sent, setSent] = useState(false);
+
+  const handleClose = () => {
+    onClose();
+    setTimeout(() => setSent(false), 200);
+  };
+
+  if (!student) return null;
+
+  return (
+    <Modal
+      open={!!student}
+      onClose={handleClose}
+      title="Reset password"
+      subtitle={sent ? undefined : `Send a password reset link to ${student.name}`}
+      footer={
+        sent ? (
+          <Button onClick={handleClose}>Done</Button>
+        ) : (
+          <>
+            <Button variant="secondary" onClick={handleClose}>
+              Cancel
+            </Button>
+            <Button onClick={() => setSent(true)}>
+              <KeyRound className="size-4" /> Send reset link
+            </Button>
+          </>
+        )
+      }
+    >
+      {sent ? (
+        <div className="flex flex-col items-center text-center py-4">
+          <div className="flex items-center justify-center size-14 rounded-full bg-success-soft text-success mb-4">
+            <MailCheck className="size-7" />
+          </div>
+          <p className="text-sm font-semibold text-ink">Reset link sent to {student.name}</p>
+          <p className="text-sm text-muted mt-1.5">
+            Instructions to set a new password were sent to{' '}
+            <span className="font-medium text-ink">{student.email || `${student.grNumber}'s registered contact`}</span>.
+          </p>
+        </div>
+      ) : (
+        <p className="text-sm text-muted">
+          {student.name} ({student.grNumber}) will receive a link to set a new password. Their current password
+          stays active until they complete the reset.
+        </p>
+      )}
+    </Modal>
+  );
+}
+
+function StudentEventsModal({ student, db, onClose }) {
+  if (!student) return null;
+
+  const rows = db.registrations
+    .filter((r) => r.student === student.id)
+    .map((reg) => ({
+      reg,
+      event: db.events.find((e) => e.id === reg.event),
+      attended: db.attendance.some((a) => a.registration === reg.id),
+    }))
+    .filter((row) => row.event)
+    .sort((a, b) => new Date(b.reg.registeredAt) - new Date(a.reg.registeredAt));
+
+  return (
+    <Modal
+      open={!!student}
+      onClose={onClose}
+      title={`${student.name}'s events`}
+      subtitle={`${rows.length} registration${rows.length === 1 ? '' : 's'}`}
+      size="lg"
+      footer={<Button onClick={onClose}>Close</Button>}
+    >
+      {rows.length === 0 ? (
+        <p className="text-sm text-muted">This student hasn't registered for any events yet.</p>
+      ) : (
+        <div className="space-y-2.5">
+          {rows.map(({ reg, event, attended }) => (
+            <div key={reg.id} className="flex items-center justify-between gap-3 rounded-md border border-border px-4 py-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-sm font-medium text-ink truncate">{event.title}</p>
+                  <Badge tone="primary">{EVENT_TYPE_LABELS[event.type]}</Badge>
+                </div>
+                <p className="text-xs text-muted mt-1">Registered {formatDate(reg.registeredAt)}</p>
+              </div>
+              {attended ? (
+                <Badge tone="success" dot>
+                  Attended
+                </Badge>
+              ) : (
+                <Badge tone="neutral">Registered</Badge>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </Modal>
   );
 }

@@ -9,7 +9,7 @@ export const Label = ({ children, htmlFor, required, className }) => (
 );
 
 export const Input = forwardRef(function Input(
-  { className, error, icon: Icon, ...props },
+  { className, error, icon: Icon, endAdornment, ...props },
   ref,
 ) {
   return (
@@ -24,11 +24,15 @@ export const Input = forwardRef(function Input(
           'transition-shadow duration-150',
           'focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-primary',
           Icon && 'pl-9',
+          endAdornment && 'pr-9',
           error ? 'border-error' : 'border-border',
           className,
         )}
         {...props}
       />
+      {endAdornment && (
+        <div className="absolute right-2.5 top-1/2 -translate-y-1/2">{endAdornment}</div>
+      )}
     </div>
   );
 });

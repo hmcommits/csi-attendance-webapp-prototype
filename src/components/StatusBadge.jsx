@@ -15,15 +15,3 @@ export function EventStatusBadge({ status }) {
     </Badge>
   );
 }
-
-export function ApprovalBadge({ approved }) {
-  return approved ? (
-    <Badge tone="success" dot>
-      Approved
-    </Badge>
-  ) : (
-    <Badge tone="warning" dot>
-      Pending
-    </Badge>
-  );
-}
