@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Search, KeyRound, Trash2, GraduationCap, CalendarDays, MailCheck } from 'lucide-react';
+import { Search, KeyRound, Trash2, GraduationCap, CalendarDays, LockKeyholeOpen, LockKeyhole } from 'lucide-react';
 import Shell from '../../components/layout/Shell';
 import Card from '../../components/ui/Card';
 import EmptyState from '../../components/ui/EmptyState';
@@ -8,10 +8,10 @@ import Modal from '../../components/ui/Modal';
 import Badge from '../../components/ui/Badge';
 import { Input } from '../../components/ui/Input';
 import { useApp } from '../../context/AppContext';
-import { EVENT_TYPE_LABELS, formatDate, initials } from '../../lib/utils';
+import { EVENT_TYPE_LABELS, cn, formatDate, initials } from '../../lib/utils';
 
 export default function AdminStudents() {
-  const { db, deleteUser } = useApp();
+  const { db, deleteUser, requestPasswordReset, updateUser } = useApp();
   const [query, setQuery] = useState('');
   const [resetTarget, setResetTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -79,7 +79,12 @@ export default function AdminStudents() {
                         <Button size="sm" variant="secondary" onClick={() => setEventsTarget(student)}>
                           <CalendarDays className="size-3.5" /> Events
                         </Button>
-                        <Button size="sm" variant="secondary" onClick={() => setResetTarget(student)}>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          className={cn(student.resetPasswordAvailable && 'border-warning/40 text-warning bg-warning-soft')}
+                          onClick={() => setResetTarget(student)}
+                        >
                           <KeyRound className="size-3.5" />
                         </Button>
                         <Button size="sm" variant="destructive-outline" onClick={() => setDeleteTarget(student)}>
@@ -95,7 +100,12 @@ export default function AdminStudents() {
         </Card>
       )}
 
-      <ResetPasswordModal student={resetTarget} onClose={() => setResetTarget(null)} />
+      <ResetPasswordModal
+        student={resetTarget}
+        onClose={() => setResetTarget(null)}
+        onEnable={requestPasswordReset}
+        onRevoke={(id) => updateUser(id, { resetPasswordAvailable: false })}
+      />
       <StudentEventsModal student={eventsTarget} db={db} onClose={() => setEventsTarget(null)} />
 
       <Modal
@@ -123,52 +133,70 @@ export default function AdminStudents() {
   );
 }
 
-function ResetPasswordModal({ student, onClose }) {
-  const [sent, setSent] = useState(false);
+function ResetPasswordModal({ student, onClose, onEnable, onRevoke }) {
+  const [justEnabled, setJustEnabled] = useState(false);
 
   const handleClose = () => {
     onClose();
-    setTimeout(() => setSent(false), 200);
+    setTimeout(() => setJustEnabled(false), 200);
   };
 
   if (!student) return null;
+
+  const isEnabled = justEnabled || student.resetPasswordAvailable;
+
+  const handleRevoke = () => {
+    onRevoke(student.id);
+    handleClose();
+  };
 
   return (
     <Modal
       open={!!student}
       onClose={handleClose}
-      title="Reset password"
-      subtitle={sent ? undefined : `Send a password reset link to ${student.name}`}
+      title="Password reset access"
+      subtitle={isEnabled ? undefined : `Enable password reset for ${student.name}`}
       footer={
-        sent ? (
-          <Button onClick={handleClose}>Done</Button>
+        isEnabled ? (
+          <>
+            <Button variant="destructive-outline" onClick={handleRevoke}>
+              <LockKeyhole className="size-4" /> Revoke access
+            </Button>
+            <Button onClick={handleClose}>Done</Button>
+          </>
         ) : (
           <>
             <Button variant="secondary" onClick={handleClose}>
               Cancel
             </Button>
-            <Button onClick={() => setSent(true)}>
-              <KeyRound className="size-4" /> Send reset link
+            <Button
+              onClick={() => {
+                onEnable(student.id);
+                setJustEnabled(true);
+              }}
+            >
+              <KeyRound className="size-4" /> Enable access
             </Button>
           </>
         )
       }
     >
-      {sent ? (
+      {isEnabled ? (
         <div className="flex flex-col items-center text-center py-4">
           <div className="flex items-center justify-center size-14 rounded-full bg-success-soft text-success mb-4">
-            <MailCheck className="size-7" />
+            <LockKeyholeOpen className="size-7" />
           </div>
-          <p className="text-sm font-semibold text-ink">Reset link sent to {student.name}</p>
+          <p className="text-sm font-semibold text-ink">Reset access enabled for {student.name}</p>
           <p className="text-sm text-muted mt-1.5">
-            Instructions to set a new password were sent to{' '}
-            <span className="font-medium text-ink">{student.email || `${student.grNumber}'s registered contact`}</span>.
+            They can now set a new password by clicking "Forgot password?" on the login page. Access is used up
+            automatically once they finish, or you can revoke it below.
           </p>
         </div>
       ) : (
         <p className="text-sm text-muted">
-          {student.name} ({student.grNumber}) will receive a link to set a new password. Their current password
-          stays active until they complete the reset.
+          By default, clicking "Forgot password?" on the login page just tells {student.name} to contact an
+          administrator. Enabling access unlocks the reset form for them the next time they try — their current
+          password stays active until they actually set a new one.
         </p>
       )}
     </Modal>

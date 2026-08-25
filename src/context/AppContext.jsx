@@ -159,6 +159,32 @@ export function AppProvider({ children }) {
     [db.users],
   );
 
+  const requestPasswordReset = useCallback(
+    (userId) => {
+      setDb((prev) => ({
+        ...prev,
+        users: prev.users.map((u) =>
+          u.id === userId ? { ...u, resetPasswordAvailable: true } : u,
+        ),
+      }));
+      notify('Password reset access enabled.');
+    },
+    [notify],
+  );
+
+  const setNewPassword = useCallback(
+    (userId, newPassword) => {
+      setDb((prev) => ({
+        ...prev,
+        users: prev.users.map((u) =>
+          u.id === userId ? { ...u, password: newPassword, resetPasswordAvailable: false } : u,
+        ),
+      }));
+      notify('Password updated.');
+    },
+    [notify],
+  );
+
   const createUser = useCallback(
     (payload) => {
       const exists = db.users.some(
@@ -430,6 +456,8 @@ export function AppProvider({ children }) {
       login,
       logout,
       registerStudent,
+      requestPasswordReset,
+      setNewPassword,
       createUser,
       updateUser,
       deleteUser,
@@ -453,6 +481,8 @@ export function AppProvider({ children }) {
       login,
       logout,
       registerStudent,
+      requestPasswordReset,
+      setNewPassword,
       createUser,
       updateUser,
       deleteUser,

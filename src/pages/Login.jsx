@@ -10,10 +10,13 @@ import {
   GraduationCap,
   Eye,
   EyeOff,
+  ShieldAlert,
+  CheckCircle2,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { HOME_BY_ROLE } from '../components/layout/navConfig';
 import Button from '../components/ui/Button';
+import Modal from '../components/ui/Modal';
 import { Field, Input } from '../components/ui/Input';
 
 const DEMO_ACCOUNTS = [
@@ -24,13 +27,16 @@ const DEMO_ACCOUNTS = [
 ];
 
 export default function Login() {
-  const { login } = useApp();
+  const { db, login, setNewPassword } = useApp();
   const navigate = useNavigate();
   const [grNumber, setGrNumber] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const [forgotStage, setForgotStage] = useState(null);
+  const [forgotUser, setForgotUser] = useState(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -51,6 +57,31 @@ export default function Login() {
     setGrNumber(account.grNumber);
     setPassword(account.password);
     setError('');
+  };
+
+  const handleForgotClick = () => {
+    const trimmed = grNumber.trim();
+    if (!trimmed) {
+      setForgotStage('no-gr');
+      return;
+    }
+    const user = db.users.find((u) => u.grNumber.toLowerCase() === trimmed.toLowerCase());
+    if (!user) {
+      setForgotStage('not-found');
+      return;
+    }
+    setForgotUser(user);
+    setForgotStage(user.resetPasswordAvailable ? 'form' : 'locked');
+  };
+
+  const closeForgot = () => {
+    setForgotStage(null);
+    setForgotUser(null);
+  };
+
+  const handlePasswordReset = (newPassword) => {
+    setNewPassword(forgotUser.id, newPassword);
+    setForgotStage('done');
   };
 
   return (
@@ -122,29 +153,40 @@ export default function Login() {
                 required
               />
             </Field>
-            <Field label="Password" htmlFor="password" required error={error}>
-              <Input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                icon={KeyRound}
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-                required
-                endAdornment={
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    className="text-muted hover:text-ink transition-colors"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    tabIndex={-1}
-                  >
-                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                  </button>
-                }
-              />
-            </Field>
+            <div>
+              <Field label="Password" htmlFor="password" required error={error}>
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  icon={KeyRound}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  required
+                  endAdornment={
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="text-muted hover:text-ink transition-colors"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                    </button>
+                  }
+                />
+              </Field>
+              <div className="flex justify-end mt-1.5">
+                <button
+                  type="button"
+                  onClick={handleForgotClick}
+                  className="text-xs font-medium text-primary hover:underline"
+                >
+                  Forgot password?
+                </button>
+              </div>
+            </div>
 
             <Button type="submit" className="w-full" size="lg" loading={loading}>
               <LogIn className="size-4" />
@@ -179,6 +221,155 @@ export default function Login() {
           </div>
         </div>
       </div>
+
+      <ForgotPasswordModal
+        stage={forgotStage}
+        user={forgotUser}
+        onClose={closeForgot}
+        onSubmit={handlePasswordReset}
+      />
     </div>
+  );
+}
+
+function ForgotPasswordModal({ stage, user, onClose, onSubmit }) {
+  const [pw1, setPw1] = useState('');
+  const [pw2, setPw2] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [formError, setFormError] = useState('');
+
+  if (!stage) return null;
+
+  const handleClose = () => {
+    onClose();
+    setTimeout(() => {
+      setPw1('');
+      setPw2('');
+      setFormError('');
+      setShowPw(false);
+    }, 200);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (pw1.length < 6) {
+      setFormError('Password must be at least 6 characters.');
+      return;
+    }
+    if (pw1 !== pw2) {
+      setFormError('Passwords do not match.');
+      return;
+    }
+    setFormError('');
+    onSubmit(pw1);
+  };
+
+  if (stage === 'no-gr' || stage === 'not-found') {
+    return (
+      <Modal
+        open
+        onClose={handleClose}
+        title="Forgot password"
+        footer={<Button onClick={handleClose}>Got it</Button>}
+      >
+        <p className="text-sm text-muted">
+          {stage === 'no-gr'
+            ? "Enter your GR number above, then click \"Forgot password?\" again."
+            : 'No account found with that GR number.'}
+        </p>
+      </Modal>
+    );
+  }
+
+  if (stage === 'locked') {
+    return (
+      <Modal
+        open
+        onClose={handleClose}
+        title="Forgot password"
+        footer={<Button onClick={handleClose}>Got it</Button>}
+      >
+        <div className="flex flex-col items-center text-center py-2">
+          <div className="flex items-center justify-center size-14 rounded-full bg-warning-soft text-warning mb-4">
+            <ShieldAlert className="size-7" />
+          </div>
+          <p className="text-sm font-semibold text-ink">Password reset isn't available yet</p>
+          <p className="text-sm text-muted mt-1.5">
+            Please contact your administrator to unlock the reset screen for {user?.name}'s account.
+          </p>
+        </div>
+      </Modal>
+    );
+  }
+
+  if (stage === 'done') {
+    return (
+      <Modal
+        open
+        onClose={handleClose}
+        title="Password updated"
+        footer={<Button onClick={handleClose}>Back to sign in</Button>}
+      >
+        <div className="flex flex-col items-center text-center py-2">
+          <div className="flex items-center justify-center size-14 rounded-full bg-success-soft text-success mb-4">
+            <CheckCircle2 className="size-7" />
+          </div>
+          <p className="text-sm font-semibold text-ink">Your password has been updated</p>
+          <p className="text-sm text-muted mt-1.5">You can now sign in with your new password.</p>
+        </div>
+      </Modal>
+    );
+  }
+
+  // stage === 'form'
+  return (
+    <Modal
+      open
+      onClose={handleClose}
+      title="Reset your password"
+      subtitle={`${user?.name} · ${user?.grNumber}`}
+      footer={
+        <>
+          <Button variant="secondary" onClick={handleClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit}>
+            <KeyRound className="size-4" /> Set new password
+          </Button>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Field label="New password" htmlFor="pw1" required>
+          <Input
+            id="pw1"
+            type={showPw ? 'text' : 'password'}
+            value={pw1}
+            onChange={(e) => setPw1(e.target.value)}
+            placeholder="At least 6 characters"
+            endAdornment={
+              <button
+                type="button"
+                onClick={() => setShowPw((v) => !v)}
+                className="text-muted hover:text-ink transition-colors"
+                aria-label={showPw ? 'Hide password' : 'Show password'}
+                tabIndex={-1}
+              >
+                {showPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
+            }
+          />
+        </Field>
+        <Field label="Confirm new password" htmlFor="pw2" required error={formError}>
+          <Input
+            id="pw2"
+            type={showPw ? 'text' : 'password'}
+            value={pw2}
+            onChange={(e) => setPw2(e.target.value)}
+            placeholder="Re-enter password"
+          />
+        </Field>
+      </form>
+    </Modal>
   );
 }
